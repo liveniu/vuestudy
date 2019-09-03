@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>天气情况</title>
+    <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+</head>
+
+<body>
+    <div id='app'>
+        <p>城市：{{city}}, 刷新时间：{{time}}</p>
+        <p v-for='data in list'>
+            {{data.position_name}} 的aqi是 {{data.aqi}}，空气质量是 {{data.level}}，PM2.5是 {{data.pm25}}
+        </p>
+    </div>
+    <script type="text/javascript">
+    vm = new Vue({
+        el: '#app',
+        data: {
+            list: [],
+            city: '',
+            time:''
+        },
+        //vue对象实例创建成功之后就会自动调用这个方法
+        //如果你想写的方法在初始化的时候就被调用的话就要要用到created这个
+        created: function() {
+            this.getlist(); //这里定义这个方法，vue实例之后运行到这里就调用这个函数
+        },
+        methods: {
+            getlist: function() {
+                $.get('http://api.help.bj.cn/apis/aqi3/', { id: 'hangzhou' }, function(res, state) {
+                    console.log(res)
+                    if (!res.data) {
+                        alert(res.data);
+                        return;
+                    }
+                    //处理正常的逻辑数据处理
+                    vm.list = res.data;
+                    vm.city = res.city
+                    vm.time = res.update
+                })
+                // $.ajax({
+                //     url: 'http://api.help.bj.cn/apis/aqi3/?id=hangzhou',
+                //     type: 'POST',
+                //     data: { id: 'hangzhou' },
+                //     success: function(res) {
+                //         console.log(res.data)
+                //         //处理服务器异常信息提示
+                //         if (!res.data) {
+                //             alert(res.data);
+                //             return;
+                //         }
+                //         //处理正常的逻辑数据处理
+                //         vm.list = res.data;
+                //         vm.city = res.city
+                //     }
+                // })
+            }
+        }
+    })
+    </script>
+</body>
+
+</html>
