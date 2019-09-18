@@ -3,23 +3,7 @@
 
 <head>
     <title></title>
-    <style type="text/css">
-    .mydiv2 {
-        height: 250px;
-        padding: 5px;
-        border: 5px solid gray;
-        margin: 5px;
-        background-color: pink;
-    }
-
-    .mydiv {
-        height: 150px;
-        padding: 5px;
-        border: 5px solid gray;
-        margin: 5px;
-        background-color: yellow;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="static/index.css">
     <script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
 </head>
@@ -35,18 +19,69 @@
             <input type="text" name="input2" v-model="msg"></input><br />
         </div>
         <div>
-        	
+            <table class="table">
+                <caption>城市：{{city}}, 刷新时间：{{time|timefilter}}</caption>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>区域</th>
+                        <th>aqi</th>
+                        <th>pm25</th>
+                        <th>空气质量</th>
+                        <th>删除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for='item,index in search(searchword)'>
+                        <td>{{index +1}}</td>
+                        <td>{{item.position_name}}</td>
+                        <td>{{item.aqi}}</td>
+                        <td>{{item.pm25}}</td>
+                        <td>{{item.level}}</td>
+                        <td><a href="" @click.prevent='delitem(index)'> 删除 </a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>
+                <label>区域<input type="text" name="" value="" v-model="newposition_name"></label>
+                <label>aqi<input type="text" name="" value="" v-model="newaqi"></label>
+                <label>PM25<input type="text" name="" value="" v-model="newpm25"></label>
+                <label>空气质量<input type="text" name="" value="" v-model="newlevel"></label>
+                <input type="button" name="" @click="additem" value="增加">
+            </div>
+            <div>
+                <label>搜索<input type="text" name="" v-model="searchword"></label>
+            </div>
         </div>
     </div>
     <script>
-    // $.get('http://api.help.bj.cn/apis/aqi3/', { id: 'hangzhou' }, function(res, state) {
-    //     console.log(res)
-    // }, 'json')
     var vm = new Vue({
         el: '#mydiv2',
         data: {
             msg: "一二三四五",
             interval: null,
+            city: null,
+            list: null,
+            time: null,
+            newposition_name: null,
+            newaqi: null,
+            newpm25: null,
+            newlevel: null,
+            searchword: null
+        },
+        created: function() {
+            this.getlist();
+            this.searchword = ''
+            //这里定义这个方法，vue实例之后运行到这里就调用这个函数
+        },
+        filters: {
+            timefilter: function(time) {
+                var dt = new Date(time.toString())
+                var year = dt.getFullYear();
+                var month = dt.getMonth()
+                var date = dt.getDate()
+                return (year + '/' + month + '/' + date+ '~~~~~')
+            }
         },
         methods: {
             zhuan() {
@@ -62,7 +97,62 @@
             },
             xiushiex() {
                 console.log("已阻止原链接get请求")
+            },
+            getlist() {
+
+                $.post('http://api.help.bj.cn/apis/aqi3/', { id: 'hangzhou' }, function(res, state) {
+                    console.log(res)
+                    if (!res.data) {
+                        alert(res.data);
+                        return;
+                    }
+                    //处理正常的逻辑数据处理
+                    vm.list = res.data;
+                    vm.city = res.city
+                    vm.time = res.update
+                })
+
+            },
+            delitem(index) {
+                console.log(index)
+                for (var i = 0; i < this.list.length; i++) {
+                    if (i == index) {
+                        console.log(i)
+                        this.list.splice(i, 1)
+                        return;
+                    }
+
+                }
+
+            },
+            additem() {
+                var newarea = {
+                    position_name: this.newposition_name,
+                    aqi: this.newaqi,
+                    pm25: this.newpm25,
+                    level: this.newlevel
+                }
+                this.list.push(newarea)
+                this.newposition_name = this.newaqi = this.newpm25 = this.newlevel = '';
+
+            },
+            search(searchword) {
+
+                console.log(searchword)
+                var newlist = []
+                if (!this.list) { return };
+                for (var i = 0; i < this.list.length; i++) {
+
+                    if (this.list[i].position_name.includes(searchword)) {
+                        console.log(this.list[i].position_name)
+                        newlist.push(this.list[i])
+                    }
+                }
+                console.log(newlist)
+                return newlist;
             }
+
+
         }
     })
     </script>
